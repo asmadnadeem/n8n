@@ -1,0 +1,85 @@
+{
+  "name": "Week 1",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Testing",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -256,
+        -48
+      ],
+      "id": "cb54f265-3287-4b4b-9a9e-8eb8030e1903",
+      "name": "On form submission",
+      "webhookId": "feb5ea55-7b83-4b3d-8252-367bf9bf1d57"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "Thanks for reaching out!",
+        "emailType": "text",
+        "message": "=Hi {{ $json.Name }}, Thanks for your message! I've received your inquiry and will get back to you shortly. Best regards,  Asmad",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "35633322-86e5-40a7-8978-461a85bd4386",
+      "name": "Send a message",
+      "webhookId": "5627d486-a0fd-4beb-9911-61fda73baaf4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9F1k8cYAi0WHFK4q",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4427d49b-5df8-444a-b308-612c30e6ffed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a51d556f74302e943d5617a32015c5a141410e183de8a551136df27cf47209d6"
+  },
+  "nodeGroups": [],
+  "id": "1hQhJLbLAZ4ccVTk",
+  "tags": []
+}
