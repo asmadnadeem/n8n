@@ -1,0 +1,497 @@
+{
+  "name": "AI-Powered Freelance Client Intake & Management System",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI-Powered Freelance Client Intake & Management System",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Project Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Logo Design"
+                  },
+                  {
+                    "option": "Brand Identity"
+                  },
+                  {
+                    "option": "UI Design"
+                  },
+                  {
+                    "option": "Other"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Budget",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Project Description",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "470de312-61f8-4d16-99c3-6785752d3b1a",
+      "name": "ClientIntakeForm",
+      "webhookId": "c2ec2d9f-612b-425f-88f6-09690c91380b"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd15f8ed-35c6-4a0a-b357-846f95b5fde6",
+              "name": "name",
+              "value": "={{ $json['Full Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "558a0aff-834d-40cd-be99-35abeee02831",
+              "name": "email",
+              "value": "={{ $json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "8c63527f-ce33-41e3-aaa5-c6d1a3d696fc",
+              "name": "project_type",
+              "value": "={{ $json['Project Type'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d24ddbd4-6be8-48a0-885a-f945ae0940c7",
+              "name": "budget",
+              "value": "={{ $json.Budget }}",
+              "type": "number"
+            },
+            {
+              "id": "f538e126-6bab-464c-9928-52389a546d11",
+              "name": "description",
+              "value": "={{ $json['Project Description'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fcf2ab9a-49b7-4e1a-8597-e8190fa386d7",
+      "name": "FormatData"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AQ.Ab8RN6IZBiscRwRd2HZFR2x-srr5E_Zd95raIG9kiUNJOfieRw",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are a freelance design business assistant. Analyze this client inquiry and respond ONLY with a valid JSON object containing these exact fields: lead_score (number 1-10), project_complexity (low, medium, or high), recommended_response (professional or decline), reason (one sentence). Client details - Project Type: {{ $json.project_type }}, Budget: {{ $json.budget }}, Description: {{ $json.description }}\"\n    }]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c79f1cd8-c00e-4de0-9e67-f483e61e2c6e",
+      "name": "AIAnalysis"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "787de02c-6dd9-4060-b8e2-4e0e3bccf2b0",
+              "name": "ai_response",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        0
+      ],
+      "id": "98c8e8f4-89bf-497c-a6fe-cea8f1101865",
+      "name": "ExtractAIResponse"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.ai_response;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\nreturn [{\n  json: {\n    ...$input.first().json,\n    lead_score: parsed.lead_score,\n    project_complexity: parsed.project_complexity,\n    recommended_response: parsed.recommended_response,\n    reason: parsed.reason\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "6a0d4b4e-1cf6-4631-87d5-c34683be9223",
+      "name": "ParseAIJSON"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "04135ede-c056-4715-8ad0-cb7cbeecf616",
+              "leftValue": "={{ $json.lead_score }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "3fff44e4-8656-4435-876b-6b46462470b6",
+      "name": "QualifyLead"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('FormatData').item.json.email }}",
+        "subject": "Re: Your Project Inquiry",
+        "message": "=Hi {{ $json.name }},  Thank you for reaching out. After reviewing your project details, I'm unable to take on new projects at this time that match your current requirements.  I wish you the best in finding the right designer for your project.  Best regards, Asmad",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        96
+      ],
+      "id": "9e61e356-e658-490d-903d-089362c7f463",
+      "name": "SendRejection",
+      "webhookId": "6ee2f6e1-568e-4556-b7f5-ce5ca193f330",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9F1k8cYAi0WHFK4q",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OL0FH7lp6BLZspLZM2jL-7VwHiNMn5BakP3ILxSFcag",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OL0FH7lp6BLZspLZM2jL-7VwHiNMn5BakP3ILxSFcag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OL0FH7lp6BLZspLZM2jL-7VwHiNMn5BakP3ILxSFcag/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "project_type": "={{ $json.project_type }}",
+            "budget": "={{ $json.budget }}",
+            "description": "={{ $json.description }}",
+            "lead_score": "={{ $json.lead_score }}",
+            "status": "qualified",
+            "timestamp": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "project_type",
+              "displayName": "project_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "8d9112fc-7914-4856-a1ba-5868102dc75b",
+      "name": "LogLead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7fwuzUXflHCk8AIb",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('FormatData').item.json.email }}",
+        "subject": "Let's talk about your project",
+        "message": "=Hi {{ $json.name }},  Thanks for reaching out — I've received your project brief and I'm excited to learn more.  Project Type: {{ $json.project_type }} Budget: ${{ $json.budget }}  I'll review your details and get back to you within 24 hours with my thoughts and next steps.  Looking forward to working together.  Best, Asmad",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -96
+      ],
+      "id": "09c9a745-81dd-4410-afbe-9b9da7efe3a5",
+      "name": "SendOnboarding",
+      "webhookId": "1e5fbfe7-9a27-4770-86cc-fb6f02dc34c2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9F1k8cYAi0WHFK4q",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "asmadnadeem443@gmail.com",
+        "subject": "New Lead: {{ $json.name }}",
+        "message": "=New qualified lead received.\n\nName: {{ $json.name }}\nEmail: {{ $json.email }}\nProject: {{ $json.project_type }}\nBudget: ${{ $json.budget }}\nLead Score: {{ $json.lead_score }}/10\nComplexity: {{ $json.project_complexity }}\nAI Note: {{ $json.reason }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        -96
+      ],
+      "id": "edebabde-48c0-4543-8def-b851c9fed70d",
+      "name": "NotifyMe",
+      "webhookId": "1e5fbfe7-9a27-4770-86cc-fb6f02dc34c2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9F1k8cYAi0WHFK4q",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "ClientIntakeForm": {
+      "main": [
+        [
+          {
+            "node": "FormatData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FormatData": {
+      "main": [
+        [
+          {
+            "node": "AIAnalysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AIAnalysis": {
+      "main": [
+        [
+          {
+            "node": "ExtractAIResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtractAIResponse": {
+      "main": [
+        [
+          {
+            "node": "ParseAIJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ParseAIJSON": {
+      "main": [
+        [
+          {
+            "node": "QualifyLead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QualifyLead": {
+      "main": [
+        [
+          {
+            "node": "LogLead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendRejection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LogLead": {
+      "main": [
+        [
+          {
+            "node": "SendOnboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendOnboarding": {
+      "main": [
+        [
+          {
+            "node": "NotifyMe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "acafb090-3a2e-4e07-84c7-e4ad1ecc9dc3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a51d556f74302e943d5617a32015c5a141410e183de8a551136df27cf47209d6"
+  },
+  "nodeGroups": [],
+  "id": "sQoII7E3CBePfa3Y",
+  "tags": []
+}
