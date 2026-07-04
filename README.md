@@ -53,4 +53,4 @@ A fully intelligent client management pipeline. It doesn't just collect inquirie
 
 **Asmad Nadeem**  
 BSCS @ FAST-NUCES CFD  
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://linkedin.com/in/YOUR-HANDLE)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://linkedin.com/in/asmadnadeem)
